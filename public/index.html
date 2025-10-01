@@ -39,12 +39,13 @@
         body: JSON.stringify(payload),
       });
       const data = await res.json();
+
       document.getElementById("result").style.display = "block";
       document.getElementById("result").textContent = JSON.stringify(data, null, 2);
 
-      if (data?.data?.qr_url) {
+      if (data?.data?.qr_image) {
         const qrImg = document.getElementById("qrImage");
-        qrImg.src = data.data.qr_url;
+        qrImg.src = data.data.qr_image;
         qrImg.style.display = "block";
       }
     });
