@@ -11,37 +11,11 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, "public"))); // serve index.html
 
-// ====== KONFIGURASI ======
-const ATLANTIC_API_KEY = "L0bajmHNfwPqZTQKKUeFNkqSsyC77x6sZg97IT9KUo1UbkubiktfXRZnIcMrLWHwah2E5R6NtzuIn5cuktRKdLpUSiJKW6wzUzyj"; // <-- Ganti pakai API Key Atlantic Anda
+// === KONFIGURASI ===
+const ATLANTIC_API_KEY = "L0bajmHNfwPqZTQKKUeFNkqSsyC77x6sZg97IT9KUo1UbkubiktfXRZnIcMrLWHwah2E5R6NtzuIn5cuktRKdLpUSiJKW6wzUzyj"; // ganti dengan API Key
 const BASE_URL = "https://atlantich2h.com";
 
-// === Endpoint Topup ===
-app.post("/api/topup", async (req, res) => {
-  try {
-    const { code, target, note } = req.body;
-    const reff_id =
-      "REF-" + Math.random().toString(36).slice(2, 10).toUpperCase();
-
-    const params = new URLSearchParams();
-    params.append("api_key", ATLANTIC_API_KEY);
-    params.append("code", code);
-    params.append("reff_id", reff_id);
-    params.append("target", target);
-    if (note) params.append("note", note);
-
-    const resp = await fetch(BASE_URL + "/transaksi/create", {
-      method: "POST",
-      body: params,
-    });
-    const data = await resp.json();
-    res.json(data);
-  } catch (err) {
-    console.error("Error Topup:", err);
-    res.status(500).json({ error: "Internal Server Error", detail: err.message });
-  }
-});
-
-// === Endpoint Deposit QRIS ===
+// === Buat Deposit QRIS ===
 app.post("/api/deposit", async (req, res) => {
   try {
     const { amount } = req.body;
@@ -52,12 +26,13 @@ app.post("/api/deposit", async (req, res) => {
     params.append("api_key", ATLANTIC_API_KEY);
     params.append("reff_id", reff_id);
     params.append("amount", amount);
-    params.append("payment_channel", "qris"); // sesuai docs Atlantic
+    params.append("payment_channel", "qris"); // wajib untuk QRIS
 
     const resp = await fetch(BASE_URL + "/deposit/create", {
       method: "POST",
       body: params,
     });
+
     const data = await resp.json();
     res.json(data);
   } catch (err) {
@@ -66,7 +41,12 @@ app.post("/api/deposit", async (req, res) => {
   }
 });
 
+// === Callback Deposit (opsional, kalau server sudah online) ===
+app.post("/Fall", express.json(), (req, res) => {
+  console.log("=== CALLBACK DEPOSIT QRIS ===");
+  console.log(req.body); // isi status transaksi dari Atlantic
+  res.send("OK");
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log("Server running di http://localhost:" + PORT)
-);
+app.listen(PORT, () => console.log("Server jalan di http://localhost:" + PORT));
